@@ -1,0 +1,11 @@
+numpy
+pandas
+matplotlib
+Pillow
+torch
+torchvision
+torchaudio
+notebook
+opencv-python
+ultralytics
+pillow
