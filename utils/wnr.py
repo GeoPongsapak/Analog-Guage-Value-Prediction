@@ -212,5 +212,5 @@ class WNRValuePrediction:
         plt.show()
 
 
-pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_3.jpg')) 
-print(pred.predicted_value)
+# pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_3.jpg')) 
+# print(pred.predicted_value)

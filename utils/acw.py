@@ -233,7 +233,7 @@ class ACWValuePrediction:
         plt.show()
 
 
-pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-end = time.time()
-print('Operation time :',end - start) 
-print(pred.predicted_value)
+# pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
+# end = time.time()
+# print('Operation time :',end - start) 
+# print(pred.predicted_value)

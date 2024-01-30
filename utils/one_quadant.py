@@ -169,5 +169,5 @@ class OneQuadant:
 
 
        
-a = OneQuadant(join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_5.jpg'),ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,conf=GENERAL_CONFIG.CONFIDENCE)
-print(a.predicted_value)
+# a = OneQuadant(join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_5.jpg'),ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,conf=GENERAL_CONFIG.CONFIDENCE)
+# print(a.predicted_value)

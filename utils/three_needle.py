@@ -222,5 +222,5 @@ class TNDValuePrediction:
         plt.show()
 
 
-pred = TNDValuePrediction(join(TND_MODEL_CONFIG.TEST_IMAGE_DIRECTORY,'test3n_1.jpg'), TND_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, start_value=TND_MODEL_CONFIG.MIN_VALUE) 
-print(pred.predicted_value)
+# pred = TNDValuePrediction(join(TND_MODEL_CONFIG.TEST_IMAGE_DIRECTORY,'test3n_1.jpg'), TND_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, start_value=TND_MODEL_CONFIG.MIN_VALUE) 
+# print(pred.predicted_value)

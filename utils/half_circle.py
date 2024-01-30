@@ -191,6 +191,6 @@ class HalfCircle:
 
 
        
-a = HalfCircle(join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE)
-print(a.predicted_value)
+# a = HalfCircle(join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE)
+# print(a.predicted_value)
 
