@@ -13,7 +13,7 @@ class WNRValuePrediction:
         self.model = WNR_MODEL_CONFIG.MODEL
         self.needle_model = WNR_MODEL_CONFIG.NEEDLE_MODEL
         self.angleb = -40
-        self.anglec = -140
+        self.anglec = -137
 
         self.error_state = True
 
@@ -36,7 +36,7 @@ class WNRValuePrediction:
         except:
             self.predicted_value = 'Not found needle tips'
 
-        
+        self.cal_center()
         if self.dw[1] > self.b[1]:
             self.predicted_value = 0
         else:
@@ -195,22 +195,21 @@ class WNRValuePrediction:
         m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
         c2 = self.b[1] - m2 * self.b[0]
         self.a = self.find_intersection_point(m1, c1, m2, c2)
-        draw = ImageDraw.Draw(self.img)
-        draw.line(((self.b[0],self.b[1]),(endxb,endyb)), fill=(255,255,0),width=10)
-        draw.line(((self.c[0],self.c[1]),(endxc,endyc)), fill=(255,255,0),width=10)
 
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
-        
+        # draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
+        draw.line(((self.a[0],self.a[1]),(self.dw[0],self.dw[1])), fill=(0,255,0),width=8)
         plt.imshow(self.img)
-        plt.title(self.predicted_value)
+        plt.title("{:.1f}".format(self.predicted_value))
+        plt.axis(False)
         plt.show()
 
 
-# pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_3.jpg')) 
-# print(pred.predicted_value)
+pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_1.jpg'))
+pred.draw_img() 
+print(pred.predicted_value)

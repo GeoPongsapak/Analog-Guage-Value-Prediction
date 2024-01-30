@@ -141,17 +141,21 @@ class OneQuadant:
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(255,0,0,255))
+        # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(255,0,0,255))
 
-        draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(255,0,0,255))
+        # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(255,0,0,255))
         
-        draw.ellipse(((self.intersection_point[0]-10, self.intersection_point[1]-10), ((self.intersection_point[0]+10,self.intersection_point[1]+10))), fill=(255,0,0,255))
+        # draw.ellipse(((self.intersection_point[0]-10, self.intersection_point[1]-10), ((self.intersection_point[0]+10,self.intersection_point[1]+10))), fill=(255,0,0,255))
 
-        draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
+
+        draw.line(((self.intersection_point[0],self.intersection_point[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=3)
         
 
     def show_result(self):
         plt.imshow(self.img)
+        plt.title("{:.1f}".format(self.predicted_value))
+        plt.axis(False)
         plt.show()
 
     def predict_value(self,):
@@ -169,5 +173,5 @@ class OneQuadant:
 
 
        
-# a = OneQuadant(join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_5.jpg'),ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,conf=GENERAL_CONFIG.CONFIDENCE)
-# print(a.predicted_value)
+a = OneQuadant(join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_3.jpg'),ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,conf=GENERAL_CONFIG.CONFIDENCE)
+print(a.predicted_value)

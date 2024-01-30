@@ -59,7 +59,7 @@ class TND_MODEL_CONFIG:
     MODEL: Any = YOLO(join(GENERAL_CONFIG.SOURCE_FOLDER,'pt_file/3-needle/3needle-max-min-detection.pt'))
     NEEDLE_MODEL: Any = YOLO(join(GENERAL_CONFIG.SOURCE_FOLDER,'pt_file/3-needle/3needle-needle-detection.pt'))
     TEST_IMAGE_DIRECTORY: str = GENERAL_CONFIG.SOURCE_FOLDER + GENERAL_CONFIG.IMAGES_FOLDER + "three_needle/"
-    MIN_VALUE: float = -20
-    MAX_VALUE: float = 200
+    MIN_VALUE: float = 0
+    MAX_VALUE: float = 400
 
 

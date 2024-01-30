@@ -4,7 +4,7 @@ sys.path.append(getcwd())
 from config.configuration import GENERAL_CONFIG,ACW_MODEL_CONFIG
 from config.libaries import *
 import time
-start = time.time()
+
 class ACWValuePrediction:
 
     def __init__(self, end_value, file_name=None, frame=None, start_value=0, conf=0.3) -> None:
@@ -216,24 +216,24 @@ class ACWValuePrediction:
         m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
         c2 = self.b[1] - m2 * self.b[0]
         self.a = self.find_intersection_point(m1, c1, m2, c2)
-        draw = ImageDraw.Draw(self.img)
-        draw.line(((self.b[0],self.b[1]),(endxb,endyb)), fill=(255,255,0),width=10)
-        draw.line(((self.c[0],self.c[1]),(endxc,endyc)), fill=(255,255,0),width=10)
+        # draw = ImageDraw.Draw(self.img)
+        # draw.line(((self.b[0],self.b[1]),(endxb,endyb)), fill=(255,255,0),width=10)
+        # draw.line(((self.c[0],self.c[1]),(endxc,endyc)), fill=(255,255,0),width=10)
+
 
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
-        
+        # draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
+        draw.line(((self.a[0],self.a[1]), (self.dw[0],self.dw[1])), fill=(0,255,0), width=10)
         plt.imshow(self.img)
-        plt.title(self.predicted_value)
+        plt.axis(False)
+        plt.title("{:.1f}".format(self.predicted_value))
         plt.show()
 
 
 # pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-# end = time.time()
-# print('Operation time :',end - start) 
 # print(pred.predicted_value)

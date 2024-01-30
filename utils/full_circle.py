@@ -168,18 +168,16 @@ class ValuePredict:
 
 
     def show_result(self):
-        plt.imshow(self.img)
-        plt.title(self.predicted_value)
-        plt.show()
-        # orig_image = Image.open(join(self.file_path,self.file_name))
-        # draw = ImageDraw.Draw(orig_image)
+        draw = ImageDraw.Draw(self.img)
         # draw.line(((self.a[0],self.a[1]), (self.b[0],self.b[1])), fill=128, width=3)
-        # draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=3)
+        draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=6)
         # draw.line(((self.a[0],self.a[1]), (self.c[0],self.c[1])), fill=(0,0,255), width=3)
-        # plt.imshow(orig_image)
-        # plt.show()
+        plt.imshow(self.img)
+        plt.title("{:.1f}".format(self.predicted_value))
+        plt.axis(False)
+        plt.show()
 
     
 
-# a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
-# print(a.predicted_value)                
+a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+print(a.predicted_value)                
