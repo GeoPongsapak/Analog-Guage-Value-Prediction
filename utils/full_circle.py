@@ -3,7 +3,7 @@ import sys
 sys.path.append(getcwd())
 from config.configuration import GENERAL_CONFIG, FULL_CIRCLE_MODEL_CONFIG
 from config.libaries import *
-class ValuePredict:
+class FullCircle:
 
     def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
         self.file_name = file_name
