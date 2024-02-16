@@ -22,6 +22,7 @@ class ValuePredict:
                 self.img = Image.open(file_name)
             else:
                 self.img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                print(self.img)
         except:
             print('Image not found!!')
             return None
@@ -44,7 +45,7 @@ class ValuePredict:
 
     def find_point(self):
         # ============= Detect and get coordinate =============
-        results = self.model([self.file_name], conf=self.conf)
+        results = self.model(self.img, conf=self.conf)
         for result in results:
             name = result.names
             names = []
@@ -136,7 +137,7 @@ class ValuePredict:
 
     def needle_tips_point_detect(self):
         coordinates = []
-        results = self.needle_model.predict(self.file_name,conf=0.5,save=False,retina_masks=True)
+        results = self.needle_model.predict(self.img,conf=self.conf,save=False,retina_masks=True)
         for result in results:
             masks = result.masks.xy
             for mask in masks[0]:
@@ -181,10 +182,16 @@ class ValuePredict:
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
         draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=10)
+        
 
     def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
         if draw:
             self.draw_img()
+            a_1 = round(self.a[0], 2)
+            a_2 = round(self.a[1], 2)
+            d_1 = round(self.d[0], 2)
+            d_2 = round(self.d[1], 2)
+            return [a_1, a_2, d_1, d_2]
 
         if show_image:
             plt.imshow(self.img)
@@ -203,7 +210,7 @@ class ValuePredict:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
     
-
-a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
-a.show_result(draw=True, show_image=True)
-print(a.predicted_value)                
+if __name__ == "__main__":
+    a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+    a.show_result(draw=True, show_image=True)
+    print(a.predicted_value)                

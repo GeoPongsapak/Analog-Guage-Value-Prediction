@@ -54,6 +54,7 @@ class ACWValuePrediction:
             df = pd.DataFrame(np.zeros([len(names), 4]))
             df.columns = ['xmin', 'ymin', 'xmax', 'ymax']
 
+
             
             boxes = rt.boxes  
             for idx, box in enumerate(boxes):
@@ -62,6 +63,7 @@ class ACWValuePrediction:
                 df.loc[idx] = row
             df['predict'] = names
             df = df.sort_values('xmin')
+            print(df)
 
         # ============= Extract maximum point coordinate =============
             try:
@@ -69,7 +71,7 @@ class ACWValuePrediction:
                     x_temp = 0
                     df_temp=df[df['predict'] == 'max']
                     for et in df_temp.iterrows():
-                        if et[1]['xmax'] > x_temp:
+                        if et[1]['xmax'] > x_temp: # iterate only xmax value
                             x_temp = et[1]['xmax']
                             end = et[1]
                     self.c = [((end['xmax'] + end['xmin'])/2),
@@ -258,6 +260,8 @@ class ACWValuePrediction:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
 
-pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-pred.draw_img(show = True)
-print(pred.predicted_value)
+
+if __name__ == "__main__":
+    pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
+    pred.draw_img(show = True)
+    print(pred.predicted_value)

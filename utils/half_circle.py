@@ -220,7 +220,8 @@ class HalfCircle:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
        
-a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), conf=GENERAL_CONFIG.CONFIDENCE)
-a.show_result(draw=True, show_image=True)
-print(a.predicted_value)
+if __name__ == "__main__":
+    a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), conf=GENERAL_CONFIG.CONFIDENCE)
+    a.show_result(draw=True, show_image=True)
+    print(a.predicted_value)
 
