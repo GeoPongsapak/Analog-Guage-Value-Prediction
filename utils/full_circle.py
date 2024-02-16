@@ -68,7 +68,7 @@ class ValuePredict:
                     self.predicted_value = 'Not found middle point'
 
             df['predict'] = names
-
+             # ============= Extract minimum point coordinate =============
             try:
                 start = df[df['predict'] == 'start']
                 self.b = [((start['xmax'].values.tolist()[0] + start['xmin'].values.tolist()[0])/2),
@@ -78,6 +78,7 @@ class ValuePredict:
                 self.predicted_value = 'Not found minimum point'
                 return None
             
+             # ============= Extract maximum point coordinate =============
             try:
                 end = df[df['predict'] == 'end']
                 self.c = [((end['xmax'].values.tolist()[0] + end['xmin'].values.tolist()[0])/2),
@@ -87,6 +88,8 @@ class ValuePredict:
                 self.predicted_value = 'Not found maximum point'
                 return None
             
+             # ============= Extract middle point coordinate =============
+
             try:
                 middle = df[df['predict'] == 'middle']
                 self.a = [((middle['xmax'].values.tolist()[0] + middle['xmin'].values.tolist()[0])/2),
@@ -96,7 +99,7 @@ class ValuePredict:
                 self.predicted_value = 'Not found middle point'
                 return None
             
-            
+             # ============= Extract needle tips point coordinate =============
             try:
                 if 'tips' not in names:
                     self.needle_tips_point_detect()
@@ -171,14 +174,19 @@ class ValuePredict:
             point_d = np.arctan2((self.a[1]-self.d[1]),(self.a[0]-self.d[0]))* 180 / np.pi
             self.predicted_value = incre * abs(point_d+(90-abs(point_b))) + self.start_value
 
-    def draw_img(self, show :bool = False, save : bool = False):
+    def draw_img(self):
         draw = ImageDraw.Draw(self.img)
         # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
         draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=10)
-        if show:
+
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
+        if draw:
+            self.draw_img()
+
+        if show_image:
             plt.imshow(self.img)
             plt.axis(False)
             plt.title("Result = {:.1f}".format(self.predicted_value))
@@ -187,8 +195,15 @@ class ValuePredict:
         if save:
             self.img.save('src/results/test_save.png')
 
-
+        if to_base64:
+            pil_im = self.img.convert('RGB')
+            cv2_img = np.array(pil_im)
+            cv2_img = cv2_img[:, :, ::-1].copy()
+            _, img_encoded = cv2.imencode('.jpg', cv2_img)
+            base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
+            return base64_encoded
     
 
 a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+a.show_result(draw=True, show_image=True)
 print(a.predicted_value)                

@@ -73,6 +73,7 @@ class WNRValuePrediction:
             # plt.imshow(im)
             # plt.show() 
             # print(df)
+             # ============= Extract minimum point coordinate =============
             try:
                 start = df[df['predict'] == 'start']
                 self.b = [((start['xmax'].values.tolist()[0] + start['xmin'].values.tolist()[0])/2),
@@ -82,6 +83,7 @@ class WNRValuePrediction:
                 self.predicted_value = 'Not found minimum point'
                 return None
             
+             # ============= Extract maximum point coordinate =============
             try:
                 end = df[df['predict'] == 'end']
                 self.c = [((end['xmax'].values.tolist()[0] + end['xmin'].values.tolist()[0])/2),
@@ -90,7 +92,7 @@ class WNRValuePrediction:
                 self.error_state = False
                 self.predicted_value = 'Not found maximum point'
                 return None
-            
+             # ============= Extract middle point coordinate =============
             try:
                 if 'middle' not in names:
                     self.cal_center()
@@ -209,17 +211,33 @@ class WNRValuePrediction:
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,0,0,255))
-        draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(255,0,0,255))
-        draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
-        draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,0,255,255))
+        # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,0,0,255))
+        # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(255,0,0,255))
+        # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,0,255,255))
         draw.line(((self.a[0],self.a[1]),(self.d[0],self.d[1])), fill=(0,255,0),width=8)
-        plt.imshow(self.img)
-        plt.title("{:.1f}".format(self.predicted_value))
-        plt.axis(False)
-        plt.show()
 
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
+        if draw:
+            self.draw_img()
+
+        if show_image:
+            plt.imshow(self.img)
+            plt.axis(False)
+            plt.title("Result = {:.1f}".format(self.predicted_value))
+            plt.show()
+
+        if save:
+            self.img.save('src/results/test_save.png')
+
+        if to_base64:
+            pil_im = self.img.convert('RGB')
+            cv2_img = np.array(pil_im)
+            cv2_img = cv2_img[:, :, ::-1].copy()
+            _, img_encoded = cv2.imencode('.jpg', cv2_img)
+            base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
+            return base64_encoded
 
 pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_2.jpg'))
-pred.draw_img() 
+pred.show_result(draw=True, show_image=True)
 print(pred.predicted_value)

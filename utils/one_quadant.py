@@ -31,6 +31,7 @@ class OneQuadant:
         if not self.error_state:
             return None
         
+         # ============= Extract middle point coordinate =============
         try:
             self.cal_center()
         except:
@@ -81,6 +82,7 @@ class OneQuadant:
             # plt.imshow(im)
             # plt.show() 
             # display(df)
+             # ============= Extract minimum point coordinate =============
             try:
                 start = df[df['predict'] == 'start']
                 self.b = [((start['xmax'].values.tolist()[0] + start['xmin'].values.tolist()[0])/2),
@@ -90,6 +92,7 @@ class OneQuadant:
                 self.predicted_value = 'Not found minimum point'
                 return None
             
+             # ============= Extract maximum point coordinate =============
             try:
                 end = df[df['predict'] == 'end']
                 self.c = [((end['xmax'].values.tolist()[0] + end['xmin'].values.tolist()[0])/2),
@@ -175,12 +178,6 @@ class OneQuadant:
         draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=3)
         
 
-    def show_result(self):
-        plt.imshow(self.img)
-        plt.title("{:.1f}".format(self.predicted_value))
-        plt.axis(False)
-        plt.show()
-
     def predict_value(self,):
         point_b = np.arctan2((self.b[1]-self.a[1]),(self.b[0]-self.a[0]))* 180 / np.pi
         point_c = np.arctan2((self.a[1]-self.c[1]),(self.c[0]-self.a[0]))* 180 / np.pi
@@ -194,7 +191,27 @@ class OneQuadant:
             self.predicted_value = incre * abs(point_d+abs(point_b)) + self.start_value
                 
 
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
+        if draw:
+            self.draw_img()
 
+        if show_image:
+            plt.imshow(self.img)
+            plt.axis(False)
+            plt.title("Result = {:.1f}".format(self.predicted_value))
+            plt.show()
+
+        if save:
+            self.img.save('src/results/test_save.png')
+
+        if to_base64:
+            pil_im = self.img.convert('RGB')
+            cv2_img = np.array(pil_im)
+            cv2_img = cv2_img[:, :, ::-1].copy()
+            _, img_encoded = cv2.imencode('.jpg', cv2_img)
+            base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
+            return base64_encoded
        
 a = OneQuadant(ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,file_name = join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_3.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+a.show_result(draw=True, show_image=True)
 print(a.predicted_value)

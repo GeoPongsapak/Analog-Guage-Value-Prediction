@@ -8,6 +8,7 @@ from os.path import isfile, join
 from pathlib import Path
 import math
 import cv2
+import base64
 
 __all__ = [
     'YOLO',
@@ -22,5 +23,6 @@ __all__ = [
     'Path',
     'math',
     'cv2',
-    'ImageFont'
+    'ImageFont',
+    'base64'
 ]

@@ -74,7 +74,8 @@ class TNDValuePrediction:
             # im = Image.fromarray(im_array[..., ::-1]).convert('RGB')
             # plt.imshow(im)
             # plt.show() 
-            
+
+             # ============= Extract maximum point coordinate =============
             try:
                 if names.count('max') > 1:
                     x_temp = 0
@@ -95,7 +96,8 @@ class TNDValuePrediction:
                 self.error_state = False
                 self.predicted_value = 'Not found maximum point'
                 return None
-
+            
+             # ============= Extract minimum point coordinate =============
             try:
                 if 'min1' in names:
                     start = df[df['predict'] == 'min1']
@@ -109,6 +111,8 @@ class TNDValuePrediction:
                 self.error_state = False
                 self.predicted_value = 'Not found minimum point'
                 return None
+            
+             # ============= Extract middle point coordinate =============
             try:
                 if 'center' not in names:
                     self.cal_center()
@@ -236,11 +240,29 @@ class TNDValuePrediction:
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
         draw.line(((self.a[0],self.a[1]),(self.d[0],self.d[1])), fill=(0,255,0),width=8)
-        plt.imshow(self.img)
-        plt.title("{:.1f}".format(self.predicted_value))
-        plt.axis(False)
-        plt.show()
+        
 
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
+        if draw:
+            self.draw_img()
+
+        if show_image:
+            plt.imshow(self.img)
+            plt.axis(False)
+            plt.title("Result = {:.1f}".format(self.predicted_value))
+            plt.show()
+
+        if save:
+            self.img.save('src/results/test_save.png')
+
+        if to_base64:
+            pil_im = self.img.convert('RGB')
+            cv2_img = np.array(pil_im)
+            cv2_img = cv2_img[:, :, ::-1].copy()
+            _, img_encoded = cv2.imencode('.jpg', cv2_img)
+            base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
+            return base64_encoded
 
 pred = TNDValuePrediction(420, conf=GENERAL_CONFIG.CONFIDENCE,file_name=join(TND_MODEL_CONFIG.TEST_IMAGE_DIRECTORY,'test3n_2.jpg'),  start_value=TND_MODEL_CONFIG.MIN_VALUE) 
+base64_encoded = pred.show_result(draw=True, to_base64=True)
 print(pred.predicted_value)

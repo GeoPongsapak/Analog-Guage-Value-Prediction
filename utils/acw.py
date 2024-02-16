@@ -237,7 +237,7 @@ class ACWValuePrediction:
         draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=10)
         
 
-    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False):
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False, to_base64 : bool = False):
         if draw:
             self.draw_img()
 
@@ -249,6 +249,14 @@ class ACWValuePrediction:
 
         if save:
             self.img.save('src/results/test_save.png')
+
+        if to_base64:
+            pil_im = self.img.convert('RGB')
+            cv2_img = np.array(pil_im)
+            cv2_img = cv2_img[:, :, ::-1].copy()
+            _, img_encoded = cv2.imencode('.jpg', cv2_img)
+            base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
+            return base64_encoded
 
 pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
 pred.draw_img(show = True)
