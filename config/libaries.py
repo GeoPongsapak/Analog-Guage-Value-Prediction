@@ -1,5 +1,5 @@
 from ultralytics import YOLO
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
@@ -21,5 +21,6 @@ __all__ = [
     'join',
     'Path',
     'math',
-    'cv2'
+    'cv2',
+    'ImageFont'
 ]

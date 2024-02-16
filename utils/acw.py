@@ -7,7 +7,7 @@ import time
 
 class ACWValuePrediction:
 
-    def __init__(self, end_value, file_name=None, frame=None, start_value=0, conf=0.3) -> None:
+    def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
         self.end_value = end_value
         self.start_value = start_value
         self.conf = conf
@@ -29,20 +29,21 @@ class ACWValuePrediction:
         if not self.error_state:
             return None
         
-        try:
-            self.find_tips()
-        except:
-            self.predicted_value = 'Not found needle tips'
-            return None
+        # try:
+        #     self.needle_tips_point_detect()
+        # except:
+        #     self.predicted_value = 'Not found needle tips'
+        #     return None
         
-        if self.dw[1] > self.b[1]:
+        if self.d[1] > self.b[1]:
             self.predicted_value = 0
         else:
             self.predict_value()
-        self.draw_img()
+        # self.draw_img()
 
 
     def find_point(self):
+        # ============= Detect and get coordinate =============
         r = self.model(self.img, conf=self.conf)
         for rt in r:
             name = rt.names
@@ -59,19 +60,10 @@ class ACWValuePrediction:
                 coordinate = box.xyxy
                 row = np.array(coordinate, dtype=float)
                 df.loc[idx] = row
-            # img = Image.open(self.file_name)
-            # draw = ImageDraw.Draw(img)
             df['predict'] = names
             df = df.sort_values('xmin')
 
-
-            # im_array = rt.plot() 
-            # im = Image.fromarray(im_array[..., ::-1]).convert('RGB')
-
-
-            # plt.imshow(im)
-            # plt.show() 
-            # display(df)
+        # ============= Extract maximum point coordinate =============
             try:
                 if names.count('max') > 1:
                     x_temp = 0
@@ -90,7 +82,8 @@ class ACWValuePrediction:
                 self.error_state = False
                 self.predicted_value = 'Not found maximum point'
                 return None
-
+            
+            # ============= Extract minimum point coordinate =============
             try:
                 if names.count('min') > 1:
                     x_temp = 0
@@ -110,6 +103,8 @@ class ACWValuePrediction:
                 self.predicted_value = 'Not found minimum point'
                 return None
             
+            # ============= Extract center point coordinate =============
+
             try:
                 if 'center' not in names:
                     self.cal_center()
@@ -122,6 +117,20 @@ class ACWValuePrediction:
                 self.predicted_value = 'Not found middle point'
                 return None
             
+            # ============= Extract needle tips point coordinate =============
+
+            try:
+                if 'tips' not in names:
+                    self.needle_tips_point_detect()
+                else:
+                    tips = df[df['predict'] == 'tips']
+                    self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
+                    ((tips['ymax'].values.tolist()[0] + tips['ymin'].values.tolist()[0])/2)]
+            except:
+                    self.error_state = False
+                    self.predicted_value = 'Not found needle tips'
+                    return None
+            
 
     def distance(self,xy, ct):
         x1,y1 = xy
@@ -129,7 +138,7 @@ class ACWValuePrediction:
         return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
     
 
-    def find_tips(self):
+    def needle_tips_point_detect(self):
         # draw = ImageDraw.Draw(self.img)
         coordinates = []
         tip = []
@@ -156,11 +165,10 @@ class ACWValuePrediction:
                         coor_temp = (i[0], i[1])
                 tip.append(coor_temp)
                 coordinates = []
-            self.dw = tip[name.index('needle')]
+            self.d = tip[name.index('needle')]
             
 
     def predict_value(self):
-        # self.a = self.intersection_point
 
         im_shape = np.array(self.img).shape
         xmax = im_shape[1]
@@ -175,18 +183,16 @@ class ACWValuePrediction:
         end_point = 360 - (abs(point_b) + abs(point_c))
         incre = (self.end_value-self.start_value)/end_point
 
-        point_d = np.arctan2((self.dw[1]-self.a[1]),(self.dw[0]-self.a[0]))* 180 / np.pi
+        point_d = np.arctan2((self.d[1]-self.a[1]),(self.d[0]-self.a[0]))* 180 / np.pi
 
-        if self.dw[1] < self.a[1]:
-            # point_d = np.arctan2((self.a[1]-self.dw[1]),(self.dw[0]-self.a[0]))* 180 / np.pi
+        if self.d[1] < self.a[1]:
+            # point_d = np.arctan2((self.a[1]-self.d[1]),(self.d[0]-self.a[0]))* 180 / np.pi
             
             self.predicted_value = incre * abs((360-abs(point_d))-abs(point_b)) + self.start_value
             # print('Quadant 4')
         else:
             
             self.predicted_value = incre * abs((abs(point_d))-abs(point_b)) + self.start_value
-        # print('Point D:',point_d)
-        # print('Increment :',incre)
 
     def find_intersection_point(self, m1, c1, m2, c2):
         x = (c2 - c1) / (m1 - m2)
@@ -224,16 +230,26 @@ class ACWValuePrediction:
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        # draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
-        draw.line(((self.a[0],self.a[1]), (self.dw[0],self.dw[1])), fill=(0,255,0), width=10)
-        plt.imshow(self.img)
-        plt.axis(False)
-        plt.title("{:.1f}".format(self.predicted_value))
-        plt.show()
+        draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=10)
+        
 
+    def show_result(self, draw : bool = False, show_image :bool = False, save : bool = False):
+        if draw:
+            self.draw_img()
 
-# pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-# print(pred.predicted_value)
+        if show_image:
+            plt.imshow(self.img)
+            plt.axis(False)
+            plt.title("Result = {:.1f}".format(self.predicted_value))
+            plt.show()
+
+        if save:
+            self.img.save('src/results/test_save.png')
+
+pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
+pred.draw_img(show = True)
+print(pred.predicted_value)

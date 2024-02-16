@@ -5,7 +5,7 @@ from config.configuration import GENERAL_CONFIG, FULL_CIRCLE_MODEL_CONFIG
 from config.libaries import *
 class ValuePredict:
 
-    def __init__(self, end_value, file_name, start_value = 0, conf=0.3, angleb = 45, anglec = 135) -> None:
+    def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
         self.file_name = file_name
         self.end_value = end_value
         self.start_value = start_value
@@ -13,12 +13,20 @@ class ValuePredict:
         self.model = FULL_CIRCLE_MODEL_CONFIG.MODEL
         self.model_whole = FULL_CIRCLE_MODEL_CONFIG.WHOLE_GUAGE_MODEL
         self.needle_model = FULL_CIRCLE_MODEL_CONFIG.NEEDLE_MODEL
-        self.angleb = angleb 
-        self.anglec = anglec
+        self.angleb = 45 
+        self.anglec = 135
         self.error_state = True
-        self.img = Image.open(file_name)
 
-        self.get_result()
+        try:
+            if file_name != None:
+                self.img = Image.open(file_name)
+            else:
+                self.img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        except:
+            print('Image not found!!')
+            return None
+
+        self.find_point()
         if not self.error_state:
             return None
         
@@ -27,15 +35,15 @@ class ValuePredict:
         else:
             self.predict_value()
         
-        self.show_result()
+        # self.show_result()
     
     def distance(self, xy, ct):
         x1,y1 = xy
         x2,y2 = ct
         return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
 
-    def get_result(self):
-        
+    def find_point(self):
+        # ============= Detect and get coordinate =============
         results = self.model([self.file_name], conf=self.conf)
         for result in results:
             name = result.names
@@ -54,29 +62,10 @@ class ValuePredict:
             
             if 'middle' not in names:
                 try:
-                    r = self.model_whole(self.file_name, conf=0.3)
-                    for rt in r:
-                        name_temp = rt.names
-                        names_temp = []
-                        for c in rt.boxes.cls:
-                            names_temp.append(name_temp[int(c)])
-
-                        df_temp = pd.DataFrame(np.zeros([len(names_temp), 4]))
-                        df_temp.columns = ['xmin', 'ymin', 'xmax', 'ymax']
-
-                        boxes = rt.boxes  
-                        for idx, box in enumerate(boxes):
-                            coordinate = box.xyxy
-                            row = np.array(coordinate, dtype=float)
-                            df_temp.loc[idx] = row
-
-                    df.loc[len(df)] = df_temp.iloc[0].tolist()
-                    names.append('middle')
+                    names, df = self.cal_center(names, df)
                 except:
                     self.error_state = False
                     self.predicted_value = 'Not found middle point'
-
-            
 
             df['predict'] = names
 
@@ -108,41 +97,58 @@ class ValuePredict:
                 return None
             
             
-            
-
-            if 'tips' not in names:
-                try:
-
-                    coordinates = []
-                    results = self.needle_model.predict(self.file_name,conf=0.5,save=False,retina_masks=True)
-                    for result in results:
-                        masks = result.masks.xy
-                        for mask in masks[0]:
-                            coordinates.append((mask[0].astype(int), mask[1].astype(int)))
-                        max_temp = 0
-                        tip = (0,0)
-                        dist = 0
-                        for i in coordinates:
-                            dist = self.distance((i[0], i[1]), self.a)
-                            if dist > max_temp:
-                                max_temp = dist
-                                tip = (i[0], i[1])
-
-                        self.d = [tip[0], tip[1]]
-                except:
-                    self.error_state = False
-                    self.predicted_value = 'Not found needle tips'
-                    return None
-            else:
-                try:
+            try:
+                if 'tips' not in names:
+                    self.needle_tips_point_detect()
+                else:
                     tips = df[df['predict'] == 'tips']
                     self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
                     ((tips['ymax'].values.tolist()[0] + tips['ymin'].values.tolist()[0])/2)]
-                except:
+            except:
                     self.error_state = False
                     self.predicted_value = 'Not found needle tips'
                     return None
+            
+    def cal_center(self, names :list, df :pd.DataFrame):
+        r = self.model_whole(self.file_name, conf=0.3)
+        for rt in r:
+            name_temp = rt.names
+            names_temp = []
+            for c in rt.boxes.cls:
+                names_temp.append(name_temp[int(c)])
 
+            df_temp = pd.DataFrame(np.zeros([len(names_temp), 4]))
+            df_temp.columns = ['xmin', 'ymin', 'xmax', 'ymax']
+
+            boxes = rt.boxes  
+            for idx, box in enumerate(boxes):
+                coordinate = box.xyxy
+                row = np.array(coordinate, dtype=float)
+                df_temp.loc[idx] = row
+
+        df.loc[len(df)] = df_temp.iloc[0].tolist()
+        names.append('middle')
+
+        return names, df
+
+    def needle_tips_point_detect(self):
+        coordinates = []
+        results = self.needle_model.predict(self.file_name,conf=0.5,save=False,retina_masks=True)
+        for result in results:
+            masks = result.masks.xy
+            for mask in masks[0]:
+                coordinates.append((mask[0].astype(int), mask[1].astype(int)))
+            max_temp = 0
+            tip = (0,0)
+            dist = 0
+            for i in coordinates:
+                dist = self.distance((i[0], i[1]), self.a)
+                if dist > max_temp:
+                    max_temp = dist
+                    tip = (i[0], i[1])
+
+                self.d = [tip[0], tip[1]]
+                          
     def predict_value(self):
 
         im_shape = np.array(self.img).shape
@@ -165,17 +171,22 @@ class ValuePredict:
             point_d = np.arctan2((self.a[1]-self.d[1]),(self.a[0]-self.d[0]))* 180 / np.pi
             self.predicted_value = incre * abs(point_d+(90-abs(point_b))) + self.start_value
 
-
-
-    def show_result(self):
+    def draw_img(self, show :bool = False, save : bool = False):
         draw = ImageDraw.Draw(self.img)
-        # draw.line(((self.a[0],self.a[1]), (self.b[0],self.b[1])), fill=128, width=3)
-        draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=6)
-        # draw.line(((self.a[0],self.a[1]), (self.c[0],self.c[1])), fill=(0,0,255), width=3)
-        plt.imshow(self.img)
-        plt.title("{:.1f}".format(self.predicted_value))
-        plt.axis(False)
-        plt.show()
+        # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
+        draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=10)
+        if show:
+            plt.imshow(self.img)
+            plt.axis(False)
+            plt.title("Result = {:.1f}".format(self.predicted_value))
+            plt.show()
+
+        if save:
+            self.img.save('src/results/test_save.png')
+
 
     
 

@@ -5,7 +5,7 @@ from config.libaries import *
 from config.configuration import GENERAL_CONFIG, TND_MODEL_CONFIG
 class TNDValuePrediction:
 
-    def __init__(self,file_name, end_value, start_value=0, conf=0.3) -> None:
+    def __init__(self,end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
         self.file_name = file_name
         self.end_value = end_value
         self.start_value = start_value
@@ -17,22 +17,30 @@ class TNDValuePrediction:
         self.anglec = 170
 
         self.error_state = True
-        self.error_text = ''
-    
+        self.predicted_value = ''
+
+        try:
+            if file_name != None:
+                self.img = Image.open(file_name)
+            else:
+                self.img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        except:
+            print('Image not found!!')
+            return None
+
         self.find_point()
+
         if not self.error_state:
-            print(self.error_text)
-            self.predicted_value = self.error_text
             return None
             
         
-        try:
-            self.find_tips()
-        except:
-            self.predicted_value = 'Not found needle tips'
-            return None
+        # try:
+        #     self.needle_tips_point_detect()
+        # except:
+        #     self.predicted_value = 'Not found needle tips'
+        #     return None
         
-        if self.dw[1] > self.b[1]:
+        if self.d[1] > self.b[1]:
             self.predicted_value = 0
         else:
             self.predict_value()
@@ -85,7 +93,7 @@ class TNDValuePrediction:
                         ((end['ymax'].values.tolist()[0] + end['ymin'].values.tolist()[0])/2)]
             except:
                 self.error_state = False
-                self.error_text = 'Not found maximum point'
+                self.predicted_value = 'Not found maximum point'
                 return None
 
             try:
@@ -99,7 +107,7 @@ class TNDValuePrediction:
                         ((start['ymax'].values.tolist()[0] + start['ymin'].values.tolist()[0])/2)]
             except:
                 self.error_state = False
-                self.error_text = 'Not found minimum point'
+                self.predicted_value = 'Not found minimum point'
                 return None
             try:
                 if 'center' not in names:
@@ -110,8 +118,22 @@ class TNDValuePrediction:
                         ((middle['ymax'].values.tolist()[0] + middle['ymin'].values.tolist()[0])/2)]
             except:
                 self.error_state = False
-                self.error_text = 'Not found middle point'
+                self.predicted_value = 'Not found middle point'
                 return None
+            
+            # ============= Extract needle tips point coordinate =============
+
+            try:
+                if 'tips' not in names:
+                    self.needle_tips_point_detect()
+                else:
+                    tips = df[df['predict'] == 'tips']
+                    self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
+                    ((tips['ymax'].values.tolist()[0] + tips['ymin'].values.tolist()[0])/2)]
+            except:
+                    self.error_state = False
+                    self.predicted_value = 'Not found needle tips'
+                    return None
             
 
     def distance(self,xy, ct):
@@ -120,7 +142,7 @@ class TNDValuePrediction:
         return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
     
 
-    def find_tips(self):
+    def needle_tips_point_detect(self):
         # draw = ImageDraw.Draw(self.img)
         coordinates = []
         tip = []
@@ -161,7 +183,7 @@ class TNDValuePrediction:
                     else:
                         tips.append(tip[idx])
             print(tips)
-            self.dw = tips[0]
+            self.d = tips[0]
             
 
     def predict_value(self):
@@ -172,8 +194,8 @@ class TNDValuePrediction:
         end_point = 180 - (abs(point_b) + (abs(point_c)))
         # print('point End :',end_point)
         incre = (self.end_value+abs(self.start_value))/end_point
-        # point_d = np.arctan2((self.intersection_point[1]-self.d[1]),(self.d[0]-self.intersection_point[0]))* 180 / np.pi
-        point_d = abs(np.arctan2((self.dw[1]-self.a[1]),(self.a[0]-self.dw[0]))* 180 / np.pi)
+        # point_d = np.arctan2((self.a[1]-self.d[1]),(self.d[0]-self.a[0]))* 180 / np.pi
+        point_d = abs(np.arctan2((self.d[1]-self.a[1]),(self.a[0]-self.d[0]))* 180 / np.pi)
         # print('point D :',point_d)
         self.predicted_value = incre * abs(point_d-abs(point_b)) + self.start_value
 
@@ -209,16 +231,16 @@ class TNDValuePrediction:
 
     def draw_img(self):
         draw = ImageDraw.Draw(self.img)
-        # draw.ellipse(((self.dw[0]-10, self.dw[1]-10), ((self.dw[0]+10,self.dw[1]+10))), fill=(0,255,0,255))
+        # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(0,255,0,255))
         # draw.ellipse(((self.c[0]-10, self.c[1]-10), ((self.c[0]+10,self.c[1]+10))), fill=(0,255,0,255))
-        draw.line(((self.a[0],self.a[1]),(self.dw[0],self.dw[1])), fill=(0,255,0),width=8)
+        draw.line(((self.a[0],self.a[1]),(self.d[0],self.d[1])), fill=(0,255,0),width=8)
         plt.imshow(self.img)
         plt.title("{:.1f}".format(self.predicted_value))
         plt.axis(False)
         plt.show()
 
 
-pred = TNDValuePrediction(join(TND_MODEL_CONFIG.TEST_IMAGE_DIRECTORY,'test3n_2.jpg'), 420, conf=GENERAL_CONFIG.CONFIDENCE, start_value=TND_MODEL_CONFIG.MIN_VALUE) 
+pred = TNDValuePrediction(420, conf=GENERAL_CONFIG.CONFIDENCE,file_name=join(TND_MODEL_CONFIG.TEST_IMAGE_DIRECTORY,'test3n_2.jpg'),  start_value=TND_MODEL_CONFIG.MIN_VALUE) 
 print(pred.predicted_value)

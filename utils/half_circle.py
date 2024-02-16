@@ -6,17 +6,26 @@ from config.libaries import *
 
 class HalfCircle:
 
-    def __init__(self,file_name, end_value, start_value=0, conf=0.3, angleb=50, anglec=130) -> None:
+    def __init__(self,end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
         self.file_name = file_name
         self.model = HALF_CIRCLE_MODEL_CONFIG.MODEL
-        self.img = Image.open(file_name)
         self.conf = conf
-        self.angleb = angleb
-        self.anglec = anglec
+        self.angleb = 50
+        self.anglec = 130
         self.start_value = start_value
         self.end_value = end_value
         self.needle_model = HALF_CIRCLE_MODEL_CONFIG.NEEDLE_MODEL
         self.error_state = True
+
+        try:
+            if file_name != None:
+                self.img = Image.open(file_name)
+            else:
+                self.img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        except:
+            print('Image not found!!')
+            return None
+
 
         self.find_point()
         if not self.error_state:
@@ -27,11 +36,11 @@ class HalfCircle:
             self.predicted_value = 'Not found middle point'
             return None
         
-        try:
-            self.needle_tips_point_detect()
-        except:
-            self.predicted_value = 'Not found needle tips'
-            return None
+        # try:
+        #     self.needle_tips_point_detect()
+        # except:
+        #     self.predicted_value = 'Not found needle tips'
+        #     return None
         
         if self.d[1] > self.b[1]:
             self.predicted_value = 0
@@ -63,13 +72,6 @@ class HalfCircle:
             df = df.sort_values('xmin')
 
 
-            # im_array = rt.plot() 
-            # im = Image.fromarray(im_array[..., ::-1]).convert('RGB')
-
-
-            # plt.imshow(im)
-            # plt.show() 
-            # display(df)
             try:
                 start = df[df['predict'] == 'min']
                 self.b = [((start['xmax'].values.tolist()[0] + start['xmin'].values.tolist()[0])/2),
@@ -87,6 +89,20 @@ class HalfCircle:
                 self.error_state = False
                 self.predicted_value = 'Not found maximum point'
                 return None
+            
+            # ============= Extract needle tips point coordinate =============
+
+            try:
+                if 'tips' not in names:
+                    self.needle_tips_point_detect()
+                else:
+                    tips = df[df['predict'] == 'tips']
+                    self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
+                    ((tips['ymax'].values.tolist()[0] + tips['ymin'].values.tolist()[0])/2)]
+            except:
+                    self.error_state = False
+                    self.predicted_value = 'Not found needle tips'
+                    return None
 
             
     def needle_tips_point_detect(self):
@@ -106,7 +122,7 @@ class HalfCircle:
             tip = (0,0)
             dist = 0
             for i in coordinates:
-                dist = distance((i[0], i[1]), self.intersection_point)
+                dist = distance((i[0], i[1]), self.a)
                 if dist > max_temp:
                     max_temp = dist
                     tip = (i[0], i[1])
@@ -142,7 +158,7 @@ class HalfCircle:
 
         m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
         c2 = self.b[1] - m2 * self.b[0]
-        self.intersection_point = self.find_intersection_point(m1, c1, m2, c2)
+        self.a = self.find_intersection_point(m1, c1, m2, c2)
         
 
 
@@ -152,19 +168,19 @@ class HalfCircle:
 
         # draw.ellipse(((self.b[0]-10, self.b[1]-10), ((self.b[0]+10,self.b[1]+10))), fill=(255,0,0,255))
         
-        # draw.ellipse(((self.intersection_point[0]-10, self.intersection_point[1]-10), ((self.intersection_point[0]+10,self.intersection_point[1]+10))), fill=(255,0,0,255))
+        # draw.ellipse(((self.a[0]-10, self.a[1]-10), ((self.a[0]+10,self.a[1]+10))), fill=(255,0,0,255))
 
         # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
 
-        # draw.line((self.intersection_point[0],self.intersection_point[1], (0,self.intersection_point[1])), fill=(255,255,255), width=20)
+        # draw.line((self.a[0],self.a[1], (0,self.a[1])), fill=(255,255,255), width=20)
 
-        # draw.line((self.intersection_point[0],self.intersection_point[1], (self.intersection_point[0],0)), fill=(255,255,255), width=20)
+        # draw.line((self.a[0],self.a[1], (self.a[0],0)), fill=(255,255,255), width=20)
 
-        # draw.line((self.intersection_point[0],self.intersection_point[1], (self.b[0], self.b[1])), fill=(255,255,255), width=20)
+        # draw.line((self.a[0],self.a[1], (self.b[0], self.b[1])), fill=(255,255,255), width=20)
 
-        # draw.line((self.intersection_point[0],self.intersection_point[1], (2000,self.intersection_point[1])), fill=(255,255,255), width=20)
+        # draw.line((self.a[0],self.a[1], (2000,self.a[1])), fill=(255,255,255), width=20)
 
-        draw.line((self.intersection_point[0],self.intersection_point[1], (self.d[0], self.d[1])), fill=(0,255,0), width=20)
+        draw.line((self.a[0],self.a[1], (self.d[0], self.d[1])), fill=(0,255,0), width=20)
         
 
     def show_result(self):
@@ -174,22 +190,22 @@ class HalfCircle:
         plt.show()
 
     def predict_value(self,):
-        point_b = np.arctan2((self.b[1]-self.intersection_point[1]),(self.intersection_point[0]-self.b[0]))* 180 / np.pi
-        point_c = np.arctan2((self.intersection_point[1]-self.c[1]),(self.c[0]-self.intersection_point[0]))* 180 / np.pi
+        point_b = np.arctan2((self.b[1]-self.a[1]),(self.a[0]-self.b[0]))* 180 / np.pi
+        point_c = np.arctan2((self.a[1]-self.c[1]),(self.c[0]-self.a[0]))* 180 / np.pi
         # print('point B :',point_b)
         # print('point C :',point_c)
         end_point = 180 - (abs(point_b) + (abs(point_c)))
         # print('point End :',end_point)
         incre = (self.end_value+abs(self.start_value))/end_point
-        # point_d = np.arctan2((self.intersection_point[1]-self.d[1]),(self.d[0]-self.intersection_point[0]))* 180 / np.pi
-        point_d = abs(np.arctan2((self.d[1]-self.intersection_point[1]),(self.intersection_point[0]-self.d[0]))* 180 / np.pi)
+        # point_d = np.arctan2((self.a[1]-self.d[1]),(self.d[0]-self.a[0]))* 180 / np.pi
+        point_d = abs(np.arctan2((self.d[1]-self.a[1]),(self.a[0]-self.d[0]))* 180 / np.pi)
         # print('point D :',point_d)
         self.predicted_value = incre * abs(point_d-abs(point_b)) + self.start_value
                 
 
 
        
-a = HalfCircle(join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE)
+a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), conf=GENERAL_CONFIG.CONFIDENCE)
 a.draw_img()
 a.show_result()
 print(a.predicted_value)
