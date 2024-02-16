@@ -31,12 +31,7 @@ class HalfCircle:
         if not self.error_state:
             return None
         
-         # ============= Extract middle point coordinate =============
-        try:
-            self.cal_center()
-        except:
-            self.predicted_value = 'Not found middle point'
-            return None
+         
         
         # try:
         #     self.needle_tips_point_detect()
@@ -91,6 +86,13 @@ class HalfCircle:
             except:
                 self.error_state = False
                 self.predicted_value = 'Not found maximum point'
+                return None
+            
+            # ============= Extract middle point coordinate =============
+            try:
+                self.cal_center()
+            except:
+                self.predicted_value = 'Not found middle point'
                 return None
             
             # ============= Extract needle tips point coordinate =============
@@ -185,7 +187,7 @@ class HalfCircle:
 
         draw.line((self.a[0],self.a[1], (self.d[0], self.d[1])), fill=(0,255,0), width=20)
         
-    def predict_value(self,):
+    def predict_value(self):
         point_b = np.arctan2((self.b[1]-self.a[1]),(self.a[0]-self.b[0]))* 180 / np.pi
         point_c = np.arctan2((self.a[1]-self.c[1]),(self.c[0]-self.a[0]))* 180 / np.pi
         # print('point B :',point_b)
@@ -220,7 +222,7 @@ class HalfCircle:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
        
-a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_6.png'), conf=GENERAL_CONFIG.CONFIDENCE)
+a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_3.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
 a.show_result(draw=True, show_image=True)
 print(a.predicted_value)
 

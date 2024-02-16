@@ -66,12 +66,20 @@ class ACWValuePrediction:
         # ============= Extract maximum point coordinate =============
             try:
                 if names.count('max') > 1:
-                    x_temp = 0
+                    size = self.img.size
+                    mid_img = [size[0]/2, size[1]/2]
+                    diff_temp = [math.inf, math.inf]
                     df_temp=df[df['predict'] == 'max']
                     for et in df_temp.iterrows():
-                        if et[1]['xmax'] > x_temp:
-                            x_temp = et[1]['xmax']
+                        temp_x = (et[1]['xmax']+et[1]['xmin'])/2
+                        temp_y = (et[1]['ymax']+et[1]['ymin'])/2
+                        if abs(temp_x - mid_img[0]) + abs(temp_y - mid_img[1]) < diff:
+                            diff = abs(temp_x - mid_img[0]) + abs(temp_y - mid_img[1])
                             end = et[1]
+                        # if abs(temp_x - mid_img[0]) < diff_temp[0] and abs(temp_y - mid_img[1]) < diff_temp[1]:
+                        #     diff_temp[0] = temp_x - mid_img[0]
+                        #     diff_temp[1] = temp_y - mid_img[1]
+                        #     end = et[1]
                     self.c = [((end['xmax'] + end['xmin'])/2),
                         ((end['ymax'] + end['ymin'])/2)]
                 else:
@@ -259,5 +267,5 @@ class ACWValuePrediction:
             return base64_encoded
 
 pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-pred.draw_img(show = True)
+# pred.show_result(show_image = True)
 print(pred.predicted_value)
