@@ -4,6 +4,8 @@ sys.path.append(getcwd())
 from config.configuration import GENERAL_CONFIG, HALF_CIRCLE_MODEL_CONFIG
 from config.libaries import *
 
+from needle_tips_calculation import needle_tips_point_detect
+from center_calculation import cal_center
 class HalfCircle:
 
     def __init__(self,end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
@@ -48,7 +50,7 @@ class HalfCircle:
 
 
     def find_point(self):
-        r = self.model(self.file_name, self.conf)
+        r = self.model(self.img, self.conf)
         for rt in r:
             name = rt.names
             names = []
@@ -90,7 +92,7 @@ class HalfCircle:
             
             # ============= Extract middle point coordinate =============
             try:
-                self.cal_center()
+                self.a = cal_center(self.b, self.c, 1200, 600, self.angleb, self.anglec)
             except:
                 self.predicted_value = 'Not found middle point'
                 return None
@@ -99,71 +101,70 @@ class HalfCircle:
 
             try:
                 if 'tips' not in names:
-                    self.needle_tips_point_detect()
+                    self.d = needle_tips_point_detect(self.img, self.needle_model, self.a)
                 else:
                     tips = df[df['predict'] == 'tips']
                     self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
                     ((tips['ymax'].values.tolist()[0] + tips['ymin'].values.tolist()[0])/2)]
-            except:
+            except Exception as err:
                     self.error_state = False
                     self.predicted_value = 'Not found needle tips'
                     return None
-
             
-    def needle_tips_point_detect(self):
-        coordinates = []
-        results = self.needle_model.predict(self.file_name,self.conf,retina_masks=True)
-        for result in results:
-            masks = result.masks.xy
-            for mask in masks[0]:
-                coordinates.append((mask[0].astype(int), mask[1].astype(int)))
+    # def needle_tips_point_detect(self):
+    #     coordinates = []
+    #     results = self.needle_model.predict(self.img,self.conf,retina_masks=True)
+    #     for result in results:
+    #         masks = result.masks.xy
+    #         for mask in masks[0]:
+    #             coordinates.append((mask[0].astype(int), mask[1].astype(int)))
 
-            def distance(xy, ct):
-                x1,y1 = xy
-                x2,y2 = ct
-                return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
+    #         def distance(xy, ct):
+    #             x1,y1 = xy
+    #             x2,y2 = ct
+    #             return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
 
-            max_temp = 0
-            tip = (0,0)
-            dist = 0
-            for i in coordinates:
-                dist = distance((i[0], i[1]), self.a)
-                if dist > max_temp:
-                    max_temp = dist
-                    tip = (i[0], i[1])
+    #         max_temp = 0
+    #         tip = (0,0)
+    #         dist = 0
+    #         for i in coordinates:
+    #             dist = distance((i[0], i[1]), self.a)
+    #             if dist > max_temp:
+    #                 max_temp = dist
+    #                 tip = (i[0], i[1])
 
-            self.d = [tip[0], tip[1]]
+    #         self.d = [tip[0], tip[1]]
 
 
-    def find_intersection_point(self, m1, c1, m2, c2):
-        x = (c2 - c1) / (m1 - m2)
-        y = m1 * x + c1
+    # def find_intersection_point(self, m1, c1, m2, c2):
+    #     x = (c2 - c1) / (m1 - m2)
+    #     y = m1 * x + c1
 
-        return x, y
+    #     return x, y
         
-    def cal_center(self):
+    # def cal_center(self):
 
-        x=self.b[0]
-        y=self.b[1]
-        angle = 50
-        endxb = x + 1200 * math.cos(math.radians(self.angleb))
+    #     x=self.b[0]
+    #     y=self.b[1]
+    #     angle = 50
+    #     endxb = x + 1200 * math.cos(math.radians(self.angleb))
         
-        endyb = y + 1200 * math.sin(math.radians(self.angleb))
+    #     endyb = y + 1200 * math.sin(math.radians(self.angleb))
 
     
-        x = self.c[0]
-        y = self.c[1]
+    #     x = self.c[0]
+    #     y = self.c[1]
 
-        endxc = x + 600 * math.cos(math.radians(self.anglec))
+    #     endxc = x + 600 * math.cos(math.radians(self.anglec))
         
-        endyc = y + 600 * math.sin(math.radians(self.anglec)) 
+    #     endyc = y + 600 * math.sin(math.radians(self.anglec)) 
 
-        m1 = (endyc - self.c[1]) / (endxc - self.c[0])
-        c1 = self.c[1] - m1 * self.c[0]
+    #     m1 = (endyc - self.c[1]) / (endxc - self.c[0])
+    #     c1 = self.c[1] - m1 * self.c[0]
 
-        m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
-        c2 = self.b[1] - m2 * self.b[0]
-        self.a = self.find_intersection_point(m1, c1, m2, c2)
+    #     m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
+    #     c2 = self.b[1] - m2 * self.b[0]
+    #     self.a = self.find_intersection_point(m1, c1, m2, c2)
         
 
 
@@ -208,7 +209,10 @@ class HalfCircle:
         if show_image:
             plt.imshow(self.img)
             plt.axis(False)
-            plt.title("Result = {:.1f}".format(self.predicted_value))
+            try:
+                plt.title("Result = {:.1f}".format(self.predicted_value))
+            except:
+                plt.title("Result = {}".format(self.predicted_value))
             plt.show()
 
         if save:
@@ -222,7 +226,7 @@ class HalfCircle:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
        
-a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_3.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+a = HalfCircle(HALF_CIRCLE_MODEL_CONFIG.MAX_VALUE, file_name = join(HALF_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testhc_1.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
 a.show_result(draw=True, show_image=True)
 print(a.predicted_value)
 

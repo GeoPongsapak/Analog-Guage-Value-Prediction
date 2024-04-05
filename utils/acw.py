@@ -5,6 +5,8 @@ from config.configuration import GENERAL_CONFIG,ACW_MODEL_CONFIG
 from config.libaries import *
 import time
 
+from needle_tips_calculation import needle_tips_point_detect
+from center_calculation import cal_center
 class ACWValuePrediction:
 
     def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
@@ -115,7 +117,7 @@ class ACWValuePrediction:
 
             try:
                 if 'center' not in names:
-                    self.cal_center()
+                    self.a = cal_center(self.b, self.c, 1200, 600, self.angleb, self.anglec)
                 else:
                     middle = df[df['predict'] == 'center']
                     self.a = [((middle['xmax'].values.tolist()[0] + middle['xmin'].values.tolist()[0])/2),
@@ -129,7 +131,7 @@ class ACWValuePrediction:
 
             try:
                 if 'tips' not in names:
-                    self.needle_tips_point_detect()
+                    self.d = needle_tips_point_detect(self.img, self.model, self.a)
                 else:
                     tips = df[df['predict'] == 'tips']
                     self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
@@ -140,40 +142,40 @@ class ACWValuePrediction:
                     return None
             
 
-    def distance(self,xy, ct):
-        x1,y1 = xy
-        x2,y2 = ct
-        return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
+    # def distance(self,xy, ct):
+    #     x1,y1 = xy
+    #     x2,y2 = ct
+    #     return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
     
 
-    def needle_tips_point_detect(self):
-        # draw = ImageDraw.Draw(self.img)
-        coordinates = []
-        tip = []
-        results = self.model.predict(self.img,conf=self.conf,save=False,retina_masks=True)
+    # def needle_tips_point_detect(self):
+    #     # draw = ImageDraw.Draw(self.img)
+    #     coordinates = []
+    #     tip = []
+    #     results = self.model.predict(self.img,conf=self.conf,save=False,retina_masks=True)
     
-        for result in results:
-            names = result.names
-            masks = result.masks.xy
-            name = []
-            for num in result.boxes.cls:
-                name.append(names[int(num)])
+    #     for result in results:
+    #         names = result.names
+    #         masks = result.masks.xy
+    #         name = []
+    #         for num in result.boxes.cls:
+    #             name.append(names[int(num)])
 
-            for idx,mask in enumerate(masks):
-                # draw.polygon(mask,outline=color[idx], width=5)
+    #         for idx,mask in enumerate(masks):
+    #             # draw.polygon(mask,outline=color[idx], width=5)
                 
-                for m in mask:                 
-                    coordinates.append((m[0].astype(int), m[1].astype(int)))
-                max_temp = 0
-                dist = 0
-                for i in coordinates:
-                    dist = self.distance((i[0], i[1]), self.a)
-                    if dist > max_temp:
-                        max_temp = dist
-                        coor_temp = (i[0], i[1])
-                tip.append(coor_temp)
-                coordinates = []
-            self.d = tip[name.index('needle')]
+    #             for m in mask:                 
+    #                 coordinates.append((m[0].astype(int), m[1].astype(int)))
+    #             max_temp = 0
+    #             dist = 0
+    #             for i in coordinates:
+    #                 dist = self.distance((i[0], i[1]), self.a)
+    #                 if dist > max_temp:
+    #                     max_temp = dist
+    #                     coor_temp = (i[0], i[1])
+    #             tip.append(coor_temp)
+    #             coordinates = []
+    #         self.d = tip[name.index('needle')]
             
 
     def predict_value(self):
@@ -202,37 +204,37 @@ class ACWValuePrediction:
             
             self.predicted_value = incre * abs((abs(point_d))-abs(point_b)) + self.start_value
 
-    def find_intersection_point(self, m1, c1, m2, c2):
-        x = (c2 - c1) / (m1 - m2)
-        y = m1 * x + c1
+    # def find_intersection_point(self, m1, c1, m2, c2):
+    #     x = (c2 - c1) / (m1 - m2)
+    #     y = m1 * x + c1
 
-        return x, y
+    #     return x, y
         
-    def cal_center(self):
+    # def cal_center(self):
 
-        x=self.b[0]
-        y=self.b[1]
-        endxb = x + 1200 * math.cos(math.radians(self.angleb))
+    #     x=self.b[0]
+    #     y=self.b[1]
+    #     endxb = x + 1200 * math.cos(math.radians(self.angleb))
         
-        endyb = y + 1200 * math.sin(math.radians(self.angleb))
+    #     endyb = y + 1200 * math.sin(math.radians(self.angleb))
 
     
-        x = self.c[0]
-        y = self.c[1]
+    #     x = self.c[0]
+    #     y = self.c[1]
 
-        endxc = x + 600 * math.cos(math.radians(self.anglec))
+    #     endxc = x + 600 * math.cos(math.radians(self.anglec))
         
-        endyc = y + 600 * math.sin(math.radians(self.anglec)) 
+    #     endyc = y + 600 * math.sin(math.radians(self.anglec)) 
 
-        m1 = (endyc - self.c[1]) / (endxc - self.c[0])
-        c1 = self.c[1] - m1 * self.c[0]
+    #     m1 = (endyc - self.c[1]) / (endxc - self.c[0])
+    #     c1 = self.c[1] - m1 * self.c[0]
 
-        m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
-        c2 = self.b[1] - m2 * self.b[0]
-        self.a = self.find_intersection_point(m1, c1, m2, c2)
-        # draw = ImageDraw.Draw(self.img)
-        # draw.line(((self.b[0],self.b[1]),(endxb,endyb)), fill=(255,255,0),width=10)
-        # draw.line(((self.c[0],self.c[1]),(endxc,endyc)), fill=(255,255,0),width=10)
+    #     m2 = (self.b[1] - endyb) / (self.b[0] - endxb)
+    #     c2 = self.b[1] - m2 * self.b[0]
+    #     self.a = self.find_intersection_point(m1, c1, m2, c2)
+    #     # draw = ImageDraw.Draw(self.img)
+    #     # draw.line(((self.b[0],self.b[1]),(endxb,endyb)), fill=(255,255,0),width=10)
+    #     # draw.line(((self.c[0],self.c[1]),(endxc,endyc)), fill=(255,255,0),width=10)
 
 
 
@@ -267,5 +269,5 @@ class ACWValuePrediction:
             return base64_encoded
 
 pred = ACWValuePrediction(ACW_MODEL_CONFIG.MAX_VALUE, conf=GENERAL_CONFIG.CONFIDENCE, file_name=join(ACW_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testacw_4.jpg'))
-# pred.show_result(show_image = True)
+pred.show_result(show_image = True)
 print(pred.predicted_value)

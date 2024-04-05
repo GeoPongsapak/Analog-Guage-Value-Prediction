@@ -3,6 +3,8 @@ import sys
 sys.path.append(getcwd())
 from config.configuration import GENERAL_CONFIG, FULL_CIRCLE_MODEL_CONFIG
 from config.libaries import *
+
+from needle_tips_calculation import needle_tips_point_detect
 class FullCircle:
 
     def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
@@ -37,14 +39,14 @@ class FullCircle:
         
         # self.show_result()
     
-    def distance(self, xy, ct):
-        x1,y1 = xy
-        x2,y2 = ct
-        return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
+    # def distance(self, xy, ct):
+    #     x1,y1 = xy
+    #     x2,y2 = ct
+    #     return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
 
     def find_point(self):
         # ============= Detect and get coordinate =============
-        results = self.model([self.file_name], conf=self.conf)
+        results = self.model(self.img, conf=self.conf)
         for result in results:
             name = result.names
             names = []
@@ -102,7 +104,7 @@ class FullCircle:
              # ============= Extract needle tips point coordinate =============
             try:
                 if 'tips' not in names:
-                    self.needle_tips_point_detect()
+                    self.d = needle_tips_point_detect(self.img, self.needle_model, self.a)
                 else:
                     tips = df[df['predict'] == 'tips']
                     self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
@@ -113,7 +115,7 @@ class FullCircle:
                     return None
             
     def cal_center(self, names :list, df :pd.DataFrame):
-        r = self.model_whole(self.file_name, conf=0.3)
+        r = self.model_whole(self.img, conf=0.3)
         for rt in r:
             name_temp = rt.names
             names_temp = []
@@ -134,23 +136,23 @@ class FullCircle:
 
         return names, df
 
-    def needle_tips_point_detect(self):
-        coordinates = []
-        results = self.needle_model.predict(self.file_name,conf=0.5,save=False,retina_masks=True)
-        for result in results:
-            masks = result.masks.xy
-            for mask in masks[0]:
-                coordinates.append((mask[0].astype(int), mask[1].astype(int)))
-            max_temp = 0
-            tip = (0,0)
-            dist = 0
-            for i in coordinates:
-                dist = self.distance((i[0], i[1]), self.a)
-                if dist > max_temp:
-                    max_temp = dist
-                    tip = (i[0], i[1])
+    # def needle_tips_point_detect(self):
+    #     coordinates = []
+    #     results = self.needle_model.predict(self.img,conf=self.conf,save=False,retina_masks=True)
+    #     for result in results:
+    #         masks = result.masks.xy
+    #         for mask in masks[0]:
+    #             coordinates.append((mask[0].astype(int), mask[1].astype(int)))
+    #         max_temp = 0
+    #         tip = (0,0)
+    #         dist = 0
+    #         for i in coordinates:
+    #             dist = self.distance((i[0], i[1]), self.a)
+    #             if dist > max_temp:
+    #                 max_temp = dist
+    #                 tip = (i[0], i[1])
 
-                self.d = [tip[0], tip[1]]
+    #             self.d = [tip[0], tip[1]]
                           
     def predict_value(self):
 
@@ -203,7 +205,7 @@ class FullCircle:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
     
-
-a = ValuePredict(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+im = cv2.imread('src/images/full_circle')
+a = FullCircle(FULL_CIRCLE_MODEL_CONFIG.MAX_VALUE,join(FULL_CIRCLE_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test11.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
 a.show_result(draw=True, show_image=True)
 print(a.predicted_value)                

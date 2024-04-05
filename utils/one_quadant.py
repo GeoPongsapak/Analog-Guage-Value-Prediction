@@ -4,6 +4,8 @@ sys.path.append(getcwd())
 from config.libaries import *
 from config.configuration import GENERAL_CONFIG, ONE_QUADANT_MODEL_CONFIG
 
+from needle_tips_calculation import needle_tips_point_detect
+from center_calculation import one_quadant_cal_center
 
 class OneQuadant:
 
@@ -32,11 +34,7 @@ class OneQuadant:
             return None
         
          # ============= Extract middle point coordinate =============
-        try:
-            self.cal_center()
-        except:
-            self.predicted_value = 'Not found middle point'
-            return None
+        
 
         # try:
         #     self.needle_tips_point_detect()
@@ -102,11 +100,17 @@ class OneQuadant:
                 self.predicted_value = 'Not found maximum point'
                 return None
             
+            try:
+                self.a = one_quadant_cal_center(self.b, self.c, 600, self.angle)
+            except:
+                self.predicted_value = 'Not found middle point'
+                return None
+            
             # ============= Extract needle tips point coordinate =============
-
+            print(names)
             try:
                 if 'tips' not in names:
-                    self.needle_tips_point_detect()
+                    self.d = needle_tips_point_detect(self.img, self.needle_model, self.a)
                 else:
                     tips = df[df['predict'] == 'tips']
                     self.d = [((tips['xmax'].values.tolist()[0] + tips['xmin'].values.tolist()[0])/2),
@@ -117,51 +121,52 @@ class OneQuadant:
                     return None
             
             
-    def needle_tips_point_detect(self):
-        coordinates = []
-        results = self.needle_model.predict(self.file_name,self.conf,retina_masks=True)
-        for result in results:
-            masks = result.masks.xy
-            for mask in masks[0]:
-                coordinates.append((mask[0].astype(int), mask[1].astype(int)))
+    # def needle_tips_point_detect(self):
+    #     coordinates = []
+    #     results = self.needle_model.predict(self.file_name,self.conf,retina_masks=True)
+    #     for result in results:
+    #         masks = result.masks.xy
+    #         for mask in masks[0]:
+    #             coordinates.append((mask[0].astype(int), mask[1].astype(int)))
 
-            def distance(xy, ct):
-                x1,y1 = xy
-                x2,y2 = ct
-                return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
+    #         def distance(xy, ct):
+    #             x1,y1 = xy
+    #             x2,y2 = ct
+    #             return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
 
-            max_temp = 0
-            tip = (0,0)
-            dist = 0
-            for i in coordinates:
-                dist = distance((i[0], i[1]), self.a)
-                if dist > max_temp:
-                    max_temp = dist
-                    tip = (i[0], i[1])
+    #         max_temp = 0
+    #         tip = (0,0)
+    #         dist = 0
+    #         for i in coordinates:
+                
+    #             dist = distance((i[0], i[1]), self.a)
+    #             if dist > max_temp:
+    #                 max_temp = dist
+    #                 tip = (i[0], i[1])
 
-            self.d = [tip[0], tip[1]]
+    #         self.d = [tip[0], tip[1]]
 
 
-    def find_intersection_point(self, m1, c1, m2, c2):
-        x = (c2 - c1) / (m1 - m2)
-        y = m1 * x + c1
+    # def find_intersection_point(self, m1, c1, m2, c2):
+    #     x = (c2 - c1) / (m1 - m2)
+    #     y = m1 * x + c1
 
-        return x, y
+    #     return x, y
         
-    def cal_center(self):
-        x = self.c[0]
-        y = self.c[1]
+    # def cal_center(self):
+    #     x = self.c[0]
+    #     y = self.c[1]
 
-        endxc = x + 600 * math.cos(math.radians(self.angle))
+    #     endxc = x + 600 * math.cos(math.radians(self.angle))
         
-        endyc = y + 600 * math.sin(math.radians(self.angle)) 
+    #     endyc = y + 600 * math.sin(math.radians(self.angle)) 
 
-        m1 = (endyc - self.c[1]) / (endxc - self.c[0])
-        c1 = self.c[1] - m1 * self.c[0]
+    #     m1 = (endyc - self.c[1]) / (endxc - self.c[0])
+    #     c1 = self.c[1] - m1 * self.c[0]
 
-        m2 = (self.b[1] - self.b[1]) / (0 - self.b[0])
-        c2 = self.b[1] - m2 * self.b[0]
-        self.a = self.find_intersection_point(m1, c1, m2, c2)
+    #     m2 = (self.b[1] - self.b[1]) / (0 - self.b[0])
+    #     c2 = self.b[1] - m2 * self.b[0]
+    #     self.a = self.find_intersection_point(m1, c1, m2, c2)
         
 
 
@@ -175,7 +180,7 @@ class OneQuadant:
 
         # draw.ellipse(((self.d[0]-10, self.d[1]-10), ((self.d[0]+10,self.d[1]+10))), fill=(0,255,0,255))
 
-        draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=3)
+        # draw.line(((self.a[0],self.a[1]), (self.d[0],self.d[1])), fill=(0,255,0), width=3)
         
 
     def predict_value(self,):
@@ -212,6 +217,6 @@ class OneQuadant:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
        
-a = OneQuadant(ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,file_name = join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_3.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
+a = OneQuadant(ONE_QUADANT_MODEL_CONFIG.MAX_VALUE,file_name = join(ONE_QUADANT_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'test1q_2.jpg'), conf=GENERAL_CONFIG.CONFIDENCE)
 a.show_result(draw=True, show_image=True)
 print(a.predicted_value)
