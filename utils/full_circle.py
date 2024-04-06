@@ -5,6 +5,7 @@ from config.configuration import GENERAL_CONFIG, FULL_CIRCLE_MODEL_CONFIG
 from config.libaries import *
 
 from needle_tips_calculation import needle_tips_point_detect
+from value_prediction import value_calculation
 class FullCircle:
 
     def __init__(self, end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
@@ -35,7 +36,8 @@ class FullCircle:
         if self.d[1] > self.b[1]:
             self.predicted_value = 0
         else:
-            self.predict_value()
+            # self.predict_value()
+            self.predicted_value = value_calculation(self.b, self.c, self.d, self.a, self.start_value, self.end_value)
         
         # self.show_result()
     

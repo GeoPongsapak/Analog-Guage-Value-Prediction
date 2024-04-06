@@ -6,6 +6,7 @@ from config.libaries import *
 
 from needle_tips_calculation import WNR_needle_tips_point_detect
 from center_calculation import cal_center
+from value_prediction import value_calculation
 
 class WNRValuePrediction:
 
@@ -43,7 +44,8 @@ class WNRValuePrediction:
         if self.d[1] > self.b[1]:
             self.predicted_value = 0
         else:
-            self.predict_value()
+            # self.predict_value()
+            self.predicted_value = value_calculation(self.b, self.c, self.d, self.a, self.start_value, self.end_value)
         # self.draw_img()
 
 
@@ -160,27 +162,27 @@ class WNRValuePrediction:
     #         else:
     #             self.d = tip[name.index('needle_w')]
 
-    def predict_value(self):
+    # def predict_value(self):
 
-        im_shape = np.array(self.img).shape
-        xmax = im_shape[1]
-        ymin = im_shape[0]
+    #     im_shape = np.array(self.img).shape
+    #     xmax = im_shape[1]
+    #     ymin = im_shape[0]
 
-        point_b = abs(np.arctan2((self.a[1]-self.b[1]),(self.b[0]-self.a[0]))* 180 / np.pi) -90
-        point_c = np.arctan2((self.a[1]-self.c[1]),(self.c[0]-self.a[0]))* 180 / np.pi
+    #     point_b = abs(np.arctan2((self.a[1]-self.b[1]),(self.b[0]-self.a[0]))* 180 / np.pi) -90
+    #     point_c = np.arctan2((self.a[1]-self.c[1]),(self.c[0]-self.a[0]))* 180 / np.pi
 
-        end_point = 360 - (abs(point_b) + abs(point_c+90))
-        incre = (self.end_value-self.start_value)/end_point
+    #     end_point = 360 - (abs(point_b) + abs(point_c+90))
+    #     incre = (self.end_value-self.start_value)/end_point
 
-        if self.d[0] > xmax/2 and self.d[1] > ymin/2:
-            point_d = np.arctan2((self.a[1]-self.d[1]),(self.d[0]-self.a[0]))* 180 / np.pi
+    #     if self.d[0] > xmax/2 and self.d[1] > ymin/2:
+    #         point_d = np.arctan2((self.a[1]-self.d[1]),(self.d[0]-self.a[0]))* 180 / np.pi
             
-            self.predicted_value = incre * (abs(point_d)+270-(point_b)) + self.start_value
-            # predict_value = incre * (abs(point_d)+270-(90-point_b)) + self.start_value
-            print('Quadant 4')
-        else:
-            point_d = np.arctan2((self.a[1]-self.d[1]),(self.a[0]-self.d[0]))* 180 / np.pi
-            self.predicted_value = incre * abs(point_d+(90-abs(point_b))) + self.start_value
+    #         self.predicted_value = incre * (abs(point_d)+270-(point_b)) + self.start_value
+    #         # predict_value = incre * (abs(point_d)+270-(90-point_b)) + self.start_value
+    #         print('Quadant 4')
+    #     else:
+    #         point_d = np.arctan2((self.a[1]-self.d[1]),(self.a[0]-self.d[0]))* 180 / np.pi
+    #         self.predicted_value = incre * abs(point_d+(90-abs(point_b))) + self.start_value
 
     # def find_intersection_point(self, m1, c1, m2, c2):
     #     x = (c2 - c1) / (m1 - m2)
@@ -241,6 +243,6 @@ class WNRValuePrediction:
             base64_encoded = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
             return base64_encoded
 
-pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_4.jpg'))
+pred = WNRValuePrediction(WNR_MODEL_CONFIG.MAX_VALUE, file_name=join(WNR_MODEL_CONFIG.TEST_IMAGE_DIRECTORY, 'testwnr_1.jpg'))
 pred.show_result(draw=True, show_image=True)
 print(pred.predicted_value)
