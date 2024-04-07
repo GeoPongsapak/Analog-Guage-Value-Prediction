@@ -6,7 +6,7 @@ from config.libaries import *
 
 from needle_tips_calculation import needle_tips_point_detect
 from center_calculation import cal_center
-from value_prediction import value_calculation
+# from value_prediction import value_calculation
 class HalfCircle:
 
     def __init__(self,end_value : float, file_name : str = None, frame :np.ndarray = None, start_value : float = 0, conf : float = 0.3) -> None:
@@ -45,8 +45,8 @@ class HalfCircle:
         if self.d[1] > self.b[1]:
             self.predicted_value = 0
         else:
-            # self.predict_value()
-            self.predicted_value = value_calculation(self.b, self.c, self.d, self.a, self.start_value, self.end_value)
+            self.predict_value()
+            # self.predicted_value = value_calculation(self.b, self.c, self.d, self.a, self.start_value, self.end_value)
         # self.draw_img()
         # self.show_result()
 
